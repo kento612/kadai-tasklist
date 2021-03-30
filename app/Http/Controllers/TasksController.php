@@ -15,10 +15,22 @@ class TasksController extends Controller
      */
     public function index()
     {
-        $tasks = Task::all();
-        return view('tasks.index', [
+        $data = [];
+        if (\Auth::check()) {
+        $user = \Auth::user();
+            
+        $tasks = $user->tasks()->orderBy('created_at', 'desc')->paginate(10);
+        
+        $data = [
             'tasks' => $tasks,
-        ]);
+         ];
+            
+            return view('tasks.index', $data);
+        }
+        
+        else{
+        return view('welcome');
+        }
     }
     
 
@@ -68,9 +80,16 @@ class TasksController extends Controller
     {
         $task = Task::findOrFail($id);
         
-         return view('tasks.show', [
-          'task' => $task,
-        ]);
+        $data = [
+            'task' => $task,
+        ];
+        
+        if (\Auth::id() === $task->user_id) {
+            return view('tasks.show', $data);;
+        }
+        else{
+        return view('welcome');
+        }
     }
 
     /**
@@ -81,11 +100,19 @@ class TasksController extends Controller
      */
     public function edit($id)
     {
-         $task = Task::findOrFail($id);
-         
-         return view('tasks.edit', [
-          'task' => $task,
-        ]);
+        $task = Task::findOrFail($id);
+        
+        $data = [
+            'task' => $task,
+        ];
+        
+        
+        if (\Auth::id() === $task->user_id) {
+            return view('tasks.edit', $data);;
+        }
+        else{
+        return view('welcome');
+        }
     }
 
     /**
@@ -117,9 +144,13 @@ class TasksController extends Controller
      */
     public function destroy($id)
     {
+      
         $task = Task::findOrFail($id);
-        $task->delete();
         
+        if (\Auth::id() === $task->user_id) {
+            $task->delete();
+        }
+
         return redirect('/');
     }
 }
